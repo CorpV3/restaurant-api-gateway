@@ -7,14 +7,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy API Gateway specific requirements
-COPY services/api-gateway/requirements.txt .
-
-# Install Python dependencies
+# Copy and install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy service code
-COPY services/api-gateway/app /app/app
+COPY app/ /app/app/
 
 # Create non-root user
 RUN useradd -m -u 1000 apigateway && chown -R apigateway:apigateway /app
