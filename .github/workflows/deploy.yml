@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  DOCKER_IMAGE: shadrach85/restaurant-api-gateway
+  DOCKER_IMAGE: shadrach85/api-gateway
   SERVICE_NAME: api-gateway
   VALUES_FILE: helm/restaurant-system/values-test.yaml
   VALUES_KEY: apiGateway
