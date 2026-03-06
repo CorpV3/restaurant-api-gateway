@@ -95,8 +95,9 @@ async def gateway(
     print(f"DEBUG: Received path: '{path}', method: {request.method}")
 
     # Determine target service based on path
-    if path.startswith("api/v1/webhooks/") or path.startswith("api/v1/integrations/"):
-        # Route webhooks and integration callbacks to integration service
+    if (path.startswith("api/v1/webhooks/") or path.startswith("api/v1/integrations/")
+            or path.startswith("api/v1/delivery-integrations")):
+        # Route webhooks, integration callbacks and delivery integration CRUD to integration service
         target_url = f"{INTEGRATION_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to INTEGRATION_SERVICE: {target_url}")
     elif path.startswith("uploads/"):
