@@ -20,6 +20,7 @@ ORDER_SERVICE_URL = os.getenv("ORDER_SERVICE_URL", "http://order-service:8004")
 POS_SERVICE_URL = os.getenv("POS_SERVICE_URL", "http://pos-service:8005")  # Future POS service
 CUSTOMER_SERVICE_URL = os.getenv("CUSTOMER_SERVICE_URL", "http://customer-service:8007")
 INTEGRATION_SERVICE_URL = os.getenv("INTEGRATION_SERVICE_URL", "http://integration-service:8015")
+PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://payment-service:8010")
 
 # Rate limiting configuration
 RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))
@@ -109,6 +110,9 @@ async def gateway(
     elif path.startswith("api/v1/customers"):
         target_url = f"{CUSTOMER_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to CUSTOMER_SERVICE: {target_url}")
+    elif path.startswith("api/v1/payments"):
+        target_url = f"{PAYMENT_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing to PAYMENT_SERVICE: {target_url}")
     elif path.startswith("api/v1/orders") or path.startswith("api/v1/sessions") or path.startswith("api/v1/assistance"):
         target_url = f"{ORDER_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to ORDER_SERVICE: {target_url}")
@@ -156,8 +160,11 @@ async def gateway(
     if "/users" in path:
         print(f"DEBUG: Headers being sent to backend: {headers}")
 
+    # Use longer timeout for card terminal payments (waits for customer to tap)
+    request_timeout = 120.0 if path.startswith("api/v1/payments/card-terminal") else 30.0
+
     # Forward request to target service
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=request_timeout) as client:
         try:
             response = await client.request(
                 method=request.method,
