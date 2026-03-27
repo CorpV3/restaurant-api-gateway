@@ -107,6 +107,14 @@ async def gateway(
     elif path.startswith("api/v1/auth") or path.startswith("api/v1/users"):
         target_url = f"{AUTH_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to AUTH_SERVICE: {target_url}")
+    elif path.startswith("api/v1/partners") and ("/signup" in path or "/login" in path or "/me" in path or "/admin/" in path):
+        # Partner auth endpoints → auth-service
+        target_url = f"{AUTH_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing partner auth to AUTH_SERVICE: {target_url}")
+    elif path.startswith("api/v1/partners"):
+        # Partner dashboard/invoices → restaurant-service
+        target_url = f"{RESTAURANT_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing partner data to RESTAURANT_SERVICE: {target_url}")
     elif path.startswith("api/v1/customers"):
         target_url = f"{CUSTOMER_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to CUSTOMER_SERVICE: {target_url}")
