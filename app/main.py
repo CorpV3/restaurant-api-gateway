@@ -20,6 +20,7 @@ ORDER_SERVICE_URL = os.getenv("ORDER_SERVICE_URL", "http://order-service:8004")
 POS_SERVICE_URL = os.getenv("POS_SERVICE_URL", "http://pos-service:8005")  # Future POS service
 CUSTOMER_SERVICE_URL = os.getenv("CUSTOMER_SERVICE_URL", "http://customer-service:8007")
 INTEGRATION_SERVICE_URL = os.getenv("INTEGRATION_SERVICE_URL", "http://integration-service:8015")
+PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://payment-service:8006")
 
 # Rate limiting configuration
 RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))
@@ -115,6 +116,9 @@ async def gateway(
         # Partner dashboard/invoices → restaurant-service
         target_url = f"{RESTAURANT_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing partner data to RESTAURANT_SERVICE: {target_url}")
+    elif path.startswith("api/v1/payments"):
+        target_url = f"{PAYMENT_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing to PAYMENT_SERVICE: {target_url}")
     elif path.startswith("api/v1/customers"):
         target_url = f"{CUSTOMER_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to CUSTOMER_SERVICE: {target_url}")
@@ -166,7 +170,9 @@ async def gateway(
         print(f"DEBUG: Headers being sent to backend: {headers}")
 
     # Forward request to target service
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    # Card terminal can take up to 90s waiting for customer — use 130s for payment routes
+    request_timeout = 130.0 if path.startswith("api/v1/payments") else 30.0
+    async with httpx.AsyncClient(timeout=request_timeout) as client:
         try:
             response = await client.request(
                 method=request.method,
