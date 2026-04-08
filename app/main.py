@@ -132,6 +132,9 @@ async def gateway(
     elif path.startswith("api/v1/restaurants"):
         target_url = f"{RESTAURANT_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to RESTAURANT_SERVICE: {target_url}")
+    elif path.startswith("api/v1/system"):
+        target_url = f"{RESTAURANT_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing system to RESTAURANT_SERVICE: {target_url}")
     elif path.startswith("api/v1/pos"):  # Future POS service
         target_url = f"{POS_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to POS_SERVICE: {target_url}")
