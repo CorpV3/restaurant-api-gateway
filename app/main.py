@@ -96,8 +96,9 @@ async def gateway(
     print(f"DEBUG: Received path: '{path}', method: {request.method}")
 
     # Determine target service based on path
-    if path.startswith("api/v1/webhooks/") or path.startswith("api/v1/integrations/"):
-        # Route webhooks and integration callbacks to integration service
+    if (path.startswith("api/v1/webhooks/") or path.startswith("api/v1/integrations/")
+            or path.startswith("api/v1/delivery-integrations")):
+        # Route webhooks, integration callbacks and delivery integration CRUD to integration service
         target_url = f"{INTEGRATION_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to INTEGRATION_SERVICE: {target_url}")
     elif path.startswith("uploads/"):
@@ -107,6 +108,17 @@ async def gateway(
     elif path.startswith("api/v1/auth") or path.startswith("api/v1/users"):
         target_url = f"{AUTH_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to AUTH_SERVICE: {target_url}")
+    elif path.startswith("api/v1/partners") and ("/signup" in path or "/login" in path or "/me" in path or "/admin/" in path):
+        # Partner auth endpoints → auth-service
+        target_url = f"{AUTH_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing partner auth to AUTH_SERVICE: {target_url}")
+    elif path.startswith("api/v1/partners"):
+        # Partner dashboard/invoices → restaurant-service
+        target_url = f"{RESTAURANT_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing partner data to RESTAURANT_SERVICE: {target_url}")
+    elif path.startswith("api/v1/payments"):
+        target_url = f"{PAYMENT_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing to PAYMENT_SERVICE: {target_url}")
     elif path.startswith("api/v1/customers"):
         target_url = f"{CUSTOMER_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to CUSTOMER_SERVICE: {target_url}")
@@ -123,6 +135,9 @@ async def gateway(
     elif path.startswith("api/v1/restaurants"):
         target_url = f"{RESTAURANT_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to RESTAURANT_SERVICE: {target_url}")
+    elif path.startswith("api/v1/system"):
+        target_url = f"{RESTAURANT_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing system to RESTAURANT_SERVICE: {target_url}")
     elif path.startswith("api/v1/pos"):  # Future POS service
         target_url = f"{POS_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to POS_SERVICE: {target_url}")
@@ -160,8 +175,8 @@ async def gateway(
     if "/users" in path:
         print(f"DEBUG: Headers being sent to backend: {headers}")
 
-    # Use longer timeout for card terminal payments (waits for customer to tap)
-    request_timeout = 120.0 if path.startswith("api/v1/payments/card-terminal") else 30.0
+    # Card terminal can take up to 90s waiting for customer — use 130s for payment routes
+    request_timeout = 130.0 if path.startswith("api/v1/payments") else 30.0
 
     # Forward request to target service
     async with httpx.AsyncClient(timeout=request_timeout) as client:
