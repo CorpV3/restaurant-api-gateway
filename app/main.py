@@ -122,6 +122,9 @@ async def gateway(
     elif path.startswith("api/v1/customers"):
         target_url = f"{CUSTOMER_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to CUSTOMER_SERVICE: {target_url}")
+    elif path.startswith("api/v1/payments"):
+        target_url = f"{PAYMENT_SERVICE_URL}/{path}"
+        print(f"DEBUG: Routing to PAYMENT_SERVICE: {target_url}")
     elif path.startswith("api/v1/orders") or path.startswith("api/v1/sessions") or path.startswith("api/v1/assistance"):
         target_url = f"{ORDER_SERVICE_URL}/{path}"
         print(f"DEBUG: Routing to ORDER_SERVICE: {target_url}")
@@ -172,9 +175,10 @@ async def gateway(
     if "/users" in path:
         print(f"DEBUG: Headers being sent to backend: {headers}")
 
-    # Forward request to target service
     # Card terminal can take up to 90s waiting for customer — use 130s for payment routes
     request_timeout = 130.0 if path.startswith("api/v1/payments") else 30.0
+
+    # Forward request to target service
     async with httpx.AsyncClient(timeout=request_timeout) as client:
         try:
             response = await client.request(
